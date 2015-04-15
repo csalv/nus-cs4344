@@ -38,6 +38,13 @@ function MMOServer() {
         }
     }
 
+    
+    var broadcastNew = funtion(grids, msg){
+    	// give me a list of grids to send msg to. 
+    	// get every player id in the grids and 
+    	// use socket[id].write(JSON.stringify(msg));
+    		
+    }
     /*
      * private method: broadcastUnless(msg, id)
      *
