@@ -238,17 +238,28 @@ function Client() {
         for (var i in ships) {
             if (ships[i] === myShip) {
                 ships[i].draw(context, true);
+                
             } else {
+            	if(ships[i].x <= myShip.x + 100 
+            			&& ships[i].x >= myShip.x - 100
+            			&& ships[i].y <= myShip.y + 100
+            			&& ships[i].y >= myShip.y - 100)
                 ships[i].draw(context, false);
             }
         }
         
         // Draw the rocket
         for (var i in rockets) {
+           if(rockets[i].x <= myShip.x + 100
+        	  &&rockets[i].x >= myShip.x - 100
+        	  &&rockets[i].y <= myShip.y + 100
+        	  &&rockets[i].y >= myShip.y -100){	
+        
             if (rockets[i].from == myId)
                 rockets[i].draw(context, true);
             else
                 rockets[i].draw(context, false);
+           }
         }
     }
 
