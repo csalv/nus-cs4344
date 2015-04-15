@@ -210,6 +210,14 @@ function Ship()
 			}
 			c.closePath();
 			c.fill();
+			
+			 c.strokeStyle = "#eee";
+			 c.lineWidth = 2;
+             c.beginPath();
+             c.rect(rx-100, ry-100, 200 , 200);
+             c.stroke();
+             c.closePath();
+             
 		} catch (e) {
 			console.log(e.message);
 		}
