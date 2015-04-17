@@ -1,32 +1,28 @@
-Subscript-broadcast model
+Subscript-broadcast model -- DONE
 	Players and rockets subscribe to grids
 		Players and rockets broadcast and receive messages within subscribed grids
 
-Each player has their own AOI of square length X
+Each player has their own AOI of square length X -- DONE
 	If AOI intersects with more than 1 grid
 		Subscribe to those grids
 
-Whenever a grid receives a new subscription
+Whenever a grid receives a new subscription -- DONE
 	Broadcast new object to every player in grid
 
-Each grid contains an array of ship ID and rocket ID
+Each grid contains an array of ship ID and rocket ID -- DONE
 
-For each grid
-	For each bullet
-		For each player
-			Check if hit
+For each bullet
+	For each player in this grid
+		Check if hit
 
 Players only render object within their AOI -- DONE
 	Even though they may receive broadcast from players outside of their AOI
-
-Because pid = increasing integer.
 
 To broadcast updates, broadcast within grid only
 	Get ship ID from grid
 	Use ship ID to get socket ID
 
-
-broadcastWithinGrid {
+broadcastWithinGrid { -- DONE
 	for all players in grid
 		get player.pid
 		get socket[player.pid] to get socket connection
