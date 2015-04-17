@@ -26,11 +26,10 @@ function gridObject(gid, xPos, yPos) {
 				that.ships[i] == null;
 				delete that.ships[i];
 				return true;
-			}  else {
-				// Do nothing
-				return false;	
 			}
-		}	
+		}
+
+		return false;
 	}
 
 	this.isShipInGrid = function(id) {
@@ -57,11 +56,10 @@ function gridObject(gid, xPos, yPos) {
 				that.rockets[i] == null;
 				delete that.rockets[i];
 				return true;
-			} else {
-				// Do nothing
-				return false;	
 			}
 		}
+
+		return false;	
 	}
 
 	this.isRocketInGrid = function(id) {
