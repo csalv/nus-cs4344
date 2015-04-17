@@ -16,9 +16,8 @@ For each grid
 		For each player
 			Check if hit
 
-Players only render object within their AOI
+Players only render object within their AOI -- DONE
 	Even though they may receive broadcast from players outside of their AOI
-
 
 Because pid = increasing integer.
 

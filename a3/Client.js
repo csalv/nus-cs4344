@@ -13,7 +13,7 @@ function Client() {
     var ships = {};    // associative array of ships, indexed by ship ID
     var rockets = {};  // associative array of rockets, indexed by rocket ID
     var myShip;        // my ship object  (same as ships[myId])
-    var myId;          // My ship ID
+    var myId;          // My ship ID    
 
     /*
      * private method: sendToServer(msg)
@@ -234,32 +234,57 @@ function Client() {
         context.fillStyle = "#000000";
         context.fillRect(0, 0, Config.WIDTH, Config.HEIGHT);
 
+        if(Config.RENDER_GRID_LINES==true) {
+            var i,j, xPos, yPos;
+            for(i=0; i<2; i++) {
+                context.strokeStyle = "#eee";
+                context.lineWidth = 1;
+                for(j=0; j<2; j++) {
+                    xPos = Config.GRID_LENGTH * j; // Set top LHS corner of grid
+                    yPos = Config.GRID_HEIGHT * i; // Set top LHS corner of grid
+       
+                    context.beginPath();
+                    context.rect(xPos, yPos, Config.GRID_LENGTH, Config.GRID_HEIGHT);
+                    context.stroke();
+                    context.closePath();
+                }
+            }
+        }
+
         // Draw the ship
         for (var i in ships) {
-            if (ships[i] === myShip) {
+            //if (ships[i] === myShip) {
+            if(i == myId) {
                 ships[i].draw(context, true);
-                
             } else {
-            	if(ships[i].x <= myShip.x + 100 
-            			&& ships[i].x >= myShip.x - 100
-            			&& ships[i].y <= myShip.y + 100
-            			&& ships[i].y >= myShip.y - 100)
-                ships[i].draw(context, false);
+            	if(Config.RENDER_AOI==true) {
+                    // If enemy ship is within my AOI, draw it
+                    if(ships[i].x <= myShip.x + Config.AOI_LENGTH 
+                        && ships[i].x >= myShip.x - Config.AOI_LENGTH
+                        && ships[i].y <= myShip.y + Config.AOI_HEIGHT
+                        && ships[i].y >= myShip.y - Config.AOI_HEIGHT)
+
+                    ships[i].draw(context, false);
+                } else ships[i].draw(context, false);
             }
         }
         
         // Draw the rocket
         for (var i in rockets) {
-           if(rockets[i].x <= myShip.x + 100
-        	  &&rockets[i].x >= myShip.x - 100
-        	  &&rockets[i].y <= myShip.y + 100
-        	  &&rockets[i].y >= myShip.y -100){	
-        
-            if (rockets[i].from == myId)
-                rockets[i].draw(context, true);
-            else
-                rockets[i].draw(context, false);
-           }
+            // If rocket is within my AOI, draw it
+            if(Config.RENDER_AOI==true) {
+                if(rockets[i].x <= myShip.x + 100
+        	       &&rockets[i].x >= myShip.x - 100
+        	       &&rockets[i].y <= myShip.y + 100
+        	       &&rockets[i].y >= myShip.y -100) {	
+                    
+                    if (rockets[i].from == myId) rockets[i].draw(context, true);
+                    else rockets[i].draw(context, false);
+                }
+            } else {
+                if (rockets[i].from == myId) rockets[i].draw(context, true);
+                else rockets[i].draw(context, false);
+            }
         }
     }
 

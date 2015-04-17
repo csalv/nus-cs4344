@@ -211,12 +211,14 @@ function Ship()
 			c.closePath();
 			c.fill();
 			
-			 c.strokeStyle = "#eee";
-			 c.lineWidth = 2;
-             c.beginPath();
-             c.rect(rx-100, ry-100, 200 , 200);
-             c.stroke();
-             c.closePath();
+			if(Config.RENDER_AOI_LINES==true) {
+				c.strokeStyle = "#eee";
+				c.lineWidth = 1;
+	            c.beginPath();
+	            c.rect(rx-Config.AOI_LENGTH, ry-Config.AOI_HEIGHT, Config.AOI_LENGTH*2 , Config.AOI_HEIGHT*2);
+	            c.stroke();
+	            c.closePath();
+        	}
              
 		} catch (e) {
 			console.log(e.message);
