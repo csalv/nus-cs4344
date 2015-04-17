@@ -152,13 +152,26 @@ function MMOServer() {
                 delete rockets[i];
                 // inform all grids that rocket is gone
             } else {
+                // Rocket is still in play, check which grid the rocket belongs to
+            }
+        }
+
+        for (i in rockets) {
+            rockets[i].moveOneStep();
+            // remove out of bounds rocket
+            if (rockets[i].x < 0 || rockets[i].x > Config.WIDTH ||
+                rockets[i].y < 0 || rockets[i].y > Config.HEIGHT) {
+                rockets[i] = null;
+                delete rockets[i];
+                // inform all grids that rocket is gone
+            } else {
                 // For each ship, checks if this rocket has hit the ship
                 // A rocket cannot hit its own ship.
                 for (j in ships) {
                     if (rockets[i] != undefined && rockets[i].from != j) {
                         if (rockets[i].hasHit(ships[j])) {
                             // tell everyone there is a hit
-                            broadcast({type:"hit", rocket:i, ship:j})
+                            broadcast({type:"hit", rocket:i, ship:j}) // Need to broadcast within grid ONLY
                             delete rockets[i];
                             // inform all grids that rocket is gone
                         }
@@ -171,10 +184,11 @@ function MMOServer() {
     var checkGridIntersection = function(leftMostX, rightMostX, topMostY, bottomMostY, id, rocketOrShip) {
         // Check y-coord for intersection with ROW grids
         // Check x-coord for intersection with COLUMN grids
-        var i, j;
+        var i, j, inRange;
 
         for(i in grid) { // For all column grids
             for(j in grid[i]) { // For all row grids
+                inRange = false;
                 //If this left most x-coord or right most x-coord falls in grid range
                 if((leftMostX>grid[i][j].topLeftX && leftMostX<(grid[i][j].topLeftX+Config.GRID_LENGTH)) ||
                     (rightMostX>grid[i][j].topLeftX && rightMostX<(grid[i][j].topLeftX+Config.GRID_LENGTH))) {
@@ -182,15 +196,16 @@ function MMOServer() {
                     if((topMostY>grid[i][j].topLeftY && topMostY<(grid[i][j].topLeftY+Config.GRID_HEIGHT)) ||
                         (bottomMostY>grid[i][j].topLeftY && bottomMostY<(grid[i][j].topLeftY+Config.GRID_HEIGHT))) {
                         // This object is within the y-range of this grid
-                        addThis(rocketOrShip, i, j, id);
-                    } else {
-                        // This object is NOT within the y-range of this grid
-                        removeThis(rocketOrShip, i, j, id);
+                        inRange = true;
                     }
+                }
+
+                if(inRange==true) {
+                    addThis(rocketOrShip, i, j, id);
                 } else {
-                    // This object is NOT within the x-range of this grid
+                    // This object is NOT within this grid
                     removeThis(rocketOrShip, i, j, id);
-                }                
+                }
             }
         }
     }
@@ -271,7 +286,7 @@ function MMOServer() {
             console.log(rocketOrShip+" "+id+" has exited grid "+grid[i][j].gridID);
             var i,j;
             for(i in grid) for(j in grid[i]) grid[i][j].printShipMembers();
-            
+
             if(rocketOrShip=="ship") {
                 // Inform other players this ship has left the grid
                 broadcastInGridUnless({
@@ -280,12 +295,15 @@ function MMOServer() {
                 }, i, j, id);
 
                 var k;
-                // Inform THIS new ship of other ships exiting the grid
+                // Inform THIS exiting ship that the other ships "vanished"
+                console.log("checking gridID="+grid[i][j].gridID+", i="+i+", j="+j);
                 for(k in grid[i][j].ships) {
-                    if(k!=id) unicast(sockets[id], {
+                    if(k!=id) {
+                        console.log("deleting "+k+" from game");
+                        unicast(sockets[id], {
                         type: "delete", 
-                        id: id
-                    });
+                        id: k});
+                    }
                 }
             }
 
