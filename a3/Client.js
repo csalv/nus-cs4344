@@ -234,7 +234,7 @@ function Client() {
         context.fillStyle = "#000000";
         context.fillRect(0, 0, Config.WIDTH, Config.HEIGHT);
 
-        if(Config.RENDER_GRID_LINES==true) {
+        if(Config.RENDER_GRID_LINES==true) { // Draw the grids for the map
             var i,j, xPos, yPos;
             for(i=0; i<2; i++) {
                 context.strokeStyle = "#eee";
@@ -253,7 +253,6 @@ function Client() {
 
         // Draw the ship
         for (var i in ships) {
-            //if (ships[i] === myShip) {
             if(i == myId) {
                 ships[i].draw(context, true);
             } else {
