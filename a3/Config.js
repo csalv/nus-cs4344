@@ -17,8 +17,8 @@ var Config = {
 
 	RENDER_AOI_LINES : true, 	// Toggles on/off the box that shows a ship's AOI
 	RENDER_AOI : false,			// Toggles on/off rendering of ships/rockets outside of AOI
-								// False = Don't render things outside of AOI
-								// True = render things outside of AOI and within subscribed grids
+								// True = Don't render things outside of AOI
+								// False = render things outside of AOI and within subscribed grids
 	AOI_LENGTH : 100,			// AOI Size
 	AOI_HEIGHT : 100 			// AOI Size
 }
