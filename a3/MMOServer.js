@@ -24,7 +24,15 @@ function MMOServer() {
     var sockets = {}; // Associative array for sockets, indexed via player ID
     var players = {}; // Associative array for players, indexed via socket ID
 
-    var grid;
+    /*
+    Grid Layout:
+    ////////////////////////
+    //  Grid0  //  Grid1  //  
+    ////////////////////////
+    //  Grid2  //  Grid3  //
+    ////////////////////////
+    */
+    var grid; // 2d-array of gridObjects
 
     var initGrid = function() {
         // Grid is organized into rows of 2
@@ -61,11 +69,13 @@ function MMOServer() {
         }
     }
 
+    // Broadcast to everyone in the grid
     var broadcastInGrid = function(msg, i, j) {
         var id;
         for(id in grid[i][j].ships) sockets[id].write(JSON.stringify(msg));
     }
 
+    // Broadcast to everyone in the grid except for the given player ID
     var broadcastInGridUnless = function(msg, i, j, pid) {
         var id;
         for(id in grid[i][j].ships) {
@@ -129,17 +139,18 @@ function MMOServer() {
      * of the game
      */
     var gameLoop = function () {
-        var i, j;
+        var i, j, k, l;
         for (i in ships) {
             ships[i].moveOneStep();
 
-            // Check if player's AOI overlaps with any grids
-            // For each grid it overlaps with, subscribe to that grid
             var leftMostX   = getModulo((ships[i].x-Config.AOI_LENGTH), Config.WIDTH);
             var rightMostX  = (ships[i].x + Config.AOI_LENGTH) % Config.WIDTH;
             var topMostY    = getModulo((ships[i].y-Config.AOI_HEIGHT), Config.HEIGHT);
             var bottomMostY = (ships[i].y + Config.AOI_HEIGHT) % Config.HEIGHT;            
 
+            // Check if player's AOI overlaps with any grids
+            // For each grid it overlaps with, subscribe to that grid
+            // For each grid we leave, unsubscribe to it
             checkGridIntersection(leftMostX, rightMostX, topMostY, bottomMostY, i, "ship");
         }
 
@@ -151,31 +162,29 @@ function MMOServer() {
                 rockets[i] = null;
                 delete rockets[i];
                 // inform all grids that rocket is gone
+                for(j in grid) for (k in grid[j]) grid[j][k].removeRocket(i);
             } else {
                 // Rocket is still in play, check which grid the rocket belongs to
-            }
-        }
+                // Rockets can only belong to at most 1 grid
+                checkGridIntersection(rockets[i].x, rockets[i].x, rockets[i].y, rockets[i].y, i, "rocket");
 
-        for (i in rockets) {
-            rockets[i].moveOneStep();
-            // remove out of bounds rocket
-            if (rockets[i].x < 0 || rockets[i].x > Config.WIDTH ||
-                rockets[i].y < 0 || rockets[i].y > Config.HEIGHT) {
-                rockets[i] = null;
-                delete rockets[i];
-                // inform all grids that rocket is gone
-            } else {
-                // For each ship, checks if this rocket has hit the ship
-                // A rocket cannot hit its own ship.
-                for (j in ships) {
-                    if (rockets[i] != undefined && rockets[i].from != j) {
-                        if (rockets[i].hasHit(ships[j])) {
-                            // tell everyone there is a hit
-                            broadcast({type:"hit", rocket:i, ship:j}) // Need to broadcast within grid ONLY
-                            delete rockets[i];
-                            // inform all grids that rocket is gone
+                for(j in grid) for (k in grid[j]) { // For all grids
+                    if(grid[j][k].isRocketInGrid(i)==true) { // See if this rocket belongs in that grid
+                        for(l in grid[j][k].ships) { // For all ships in the grid
+                            if (rockets[i] != undefined && rockets[i].from != l) {
+                                if (rockets[i].hasHit(ships[l])) {
+                                    // tell everyone there is a hit
+                                    broadcastInGrid({type:"hit", rocket:i, ship:l}, j, k) // Need to broadcast within grid ONLY
+                                    delete rockets[i];
+                                    // inform all grids that rocket is gone
+                                    grid[j][k].removeRocket(i);
+                                    break;
+                                }
+                            }
                         }
-                    } 
+                    }
+
+                    break;
                 }
             }
         }
@@ -201,6 +210,7 @@ function MMOServer() {
                 }
 
                 if(inRange==true) {
+                    // This object is within this grid
                     addThis(rocketOrShip, i, j, id);
                 } else {
                     // This object is NOT within this grid
@@ -213,13 +223,18 @@ function MMOServer() {
     var addThis = function(rocketOrShip, i, j, id) {
         // Inform gridObject of the change. It will decide to add (if it doesn't exist)
         var added;
-        if(rocketOrShip=="ship") { // Subscribe the ship to the grid
+        if(rocketOrShip=="ship") {
+            // Subscribe the ship to the grid
+            // Won't get added if it already exists inside
             added = addThisShip(i, j, id);            
-        } else if(rocketOrShip=="rocket") { // Subscribe the rocket to the grid
+        } else if(rocketOrShip=="rocket") {
+            // Subscribe the rocket to the grid
+            // Won't get added if it already exists inside
             added = addThisRocket(i, j, id);
         }
 
-        if(added==true) { //Rocket or ship joined the grid
+        if(added==true) {
+            //Rocket or ship joined the grid
             console.log(rocketOrShip+" "+id+" has moved into grid "+grid[i][j].gridID);
             var i,j;
             for(i in grid) for(j in grid[i]) grid[i][j].printShipMembers();
@@ -242,7 +257,7 @@ function MMOServer() {
 
             // Inform THIS new ship of other objects within the joined grid
             for(k in grid[i][j].ships) {
-                if(k!=id) unicast(sockets[id], {
+                if(k!=id && ships[k]!=undefined) unicast(sockets[id], {
                     type:"new",
                     id: k,
                     x: ships[k].x, 
@@ -254,7 +269,7 @@ function MMOServer() {
             for(k in grid[i][j].rockets) {
                 unicast(sockets[id], {
                     type:"fire",
-                    ship: rockets[i].from,
+                    ship: rockets[k].from,
                     rocket: k,
                     x: rockets[k].x,
                     y: rockets[k].y,
@@ -268,6 +283,18 @@ function MMOServer() {
 
     var addThisRocket = function(i, j, id) {
         var added = grid[i][j].addRocket(id);
+
+        if(added==true) {
+            // Inform other players in the grid that this rocket entered said grid
+            broadcastInGridUnless({
+                type:"fire",
+                ship: rockets[id].from,
+                rocket: id,
+                x: rockets[id].x,
+                y: rockets[id].y,
+                dir: rockets[id].dir
+            }, i, j, id);   
+        }
 
         return added;
     }
@@ -336,11 +363,24 @@ function MMOServer() {
                 // server/closes the window
                 conn.on('close', function () {
                     var pid = players[conn.id].pid;
+                    var i,j;
+
+                    console.log("player "+pid+" has left the game.");
+
+                    for(i in grid) for(j in grid[i]) {
+                        // Delete this ship from other grids
+                        if(grid[i][j].isShipInGrid(pid)==true) { // If this ship belongs in this grid
+                            // Inform other players this ship has left the grid
+                            broadcastInGridUnless({
+                                type: "delete", 
+                                id: pid
+                            }, i, j, pid);
+                        }
+                    }
+
                     delete ships[pid];
                     delete players[conn.id];
-                    broadcastUnless({
-                        type: "delete", 
-                        id: pid}, pid)
+                    console.log("Finished informing everyone player "+pid+" has left the game.");
                 });
 
                 // When the client send something to the server.

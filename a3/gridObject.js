@@ -3,8 +3,8 @@
 function gridObject(gid, xPos, yPos) {
 	var that = this;
 
-	this.ships = {};
-	this.rockets = {};
+	this.ships = {};	// Indexed by the ship ID (or player ID)
+	this.rockets = {};	// Indexed by the rocket ID (or the timeStamp)
 
 	this.gridID = gid;
 	this.topLeftX = xPos; // The x-coord of the top left-hand corner of this grid
