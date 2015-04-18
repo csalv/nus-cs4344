@@ -199,11 +199,11 @@ function MMOServer() {
             for(j in grid[i]) { // For all row grids
                 inRange = false;
                 //If this left most x-coord or right most x-coord falls in grid range
-                if((leftMostX>grid[i][j].topLeftX && leftMostX<(grid[i][j].topLeftX+Config.GRID_LENGTH)) ||
-                    (rightMostX>grid[i][j].topLeftX && rightMostX<(grid[i][j].topLeftX+Config.GRID_LENGTH))) {
+                if((leftMostX>=grid[i][j].topLeftX && leftMostX<=(grid[i][j].topLeftX+Config.GRID_LENGTH)) ||
+                    (rightMostX>=grid[i][j].topLeftX && rightMostX<=(grid[i][j].topLeftX+Config.GRID_LENGTH))) {
                     // This object is within the x-range of this grid
-                    if((topMostY>grid[i][j].topLeftY && topMostY<(grid[i][j].topLeftY+Config.GRID_HEIGHT)) ||
-                        (bottomMostY>grid[i][j].topLeftY && bottomMostY<(grid[i][j].topLeftY+Config.GRID_HEIGHT))) {
+                    if((topMostY>=grid[i][j].topLeftY && topMostY<=(grid[i][j].topLeftY+Config.GRID_HEIGHT)) ||
+                        (bottomMostY>=grid[i][j].topLeftY && bottomMostY<=(grid[i][j].topLeftY+Config.GRID_HEIGHT))) {
                         // This object is within the y-range of this grid
                         inRange = true;
                     }
