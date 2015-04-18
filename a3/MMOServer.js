@@ -326,7 +326,7 @@ function MMOServer() {
                 console.log("checking gridID="+grid[i][j].gridID+", i="+i+", j="+j);
                 for(k in grid[i][j].ships) {
                     if(k!=id) {
-                        console.log("deleting "+k+" from game");
+                        console.log("deleting "+k+" from grid");
                         unicast(sockets[id], {
                         type: "delete", 
                         id: k});
