@@ -174,7 +174,8 @@ function MMOServer() {
                             if (rockets[i] != undefined && rockets[i].from != l) {
                                 if (rockets[i].hasHit(ships[l])) {
                                     // tell everyone there is a hit
-                                    broadcastInGrid({type:"hit", rocket:i, ship:l}, j, k) // Need to broadcast within grid ONLY
+                                    broadcastInGridUnless({type:"hit", rocket:i, ship:l}, j, k, rockets[i].from) // Need to broadcast within grid ONLY
+                                    unicast(sockets[rockets[i].from], {type:"hit", rocket:i, ship:l});
                                     delete rockets[i];
                                     // inform all grids that rocket is gone
                                     grid[j][k].removeRocket(i);
