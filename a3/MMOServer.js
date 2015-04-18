@@ -369,7 +369,8 @@ function MMOServer() {
 
                     for(i in grid) for(j in grid[i]) {
                         // Delete this ship from other grids
-                        if(grid[i][j].isShipInGrid(pid)==true) { // If this ship belongs in this grid
+                        if(grid[i][j].removeShip(pid)==true) { // If this ship belongs in this grid
+                            console.log("player "+pid+" has left grid "+grid[i][j].gridID);                            
                             // Inform other players this ship has left the grid
                             broadcastInGridUnless({
                                 type: "delete", 
