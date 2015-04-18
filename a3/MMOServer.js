@@ -191,6 +191,10 @@ function MMOServer() {
     }
 
     var checkGridIntersection = function(leftMostX, rightMostX, topMostY, bottomMostY, id, rocketOrShip) {
+        checkGridIntersectionRemove(leftMostX, rightMostX, topMostY, bottomMostY, id, rocketOrShip, true);
+    }
+
+    var checkGridIntersectionRemove = function(leftMostX, rightMostX, topMostY, bottomMostY, id, rocketOrShip, remove) {
         // Check y-coord for intersection with ROW grids
         // Check x-coord for intersection with COLUMN grids
         var i, j, inRange;
@@ -212,7 +216,7 @@ function MMOServer() {
                 if(inRange==true) {
                     // This object is within this grid
                     addThis(rocketOrShip, i, j, id);
-                } else {
+                } else if(remove==true) {
                     // This object is NOT within this grid
                     removeThis(rocketOrShip, i, j, id);
                 }
@@ -417,6 +421,17 @@ function MMOServer() {
 
                             ships[pid] = new Ship();
                             ships[pid].init(x, y, dir);
+
+                            // Initialize grids this ship will belong to.
+                            var leftMostX   = getModulo((ships[pid].x-Config.AOI_LENGTH), Config.WIDTH);
+                            var rightMostX  = (ships[pid].x + Config.AOI_LENGTH) % Config.WIDTH;
+                            var topMostY    = getModulo((ships[pid].y-Config.AOI_HEIGHT), Config.HEIGHT);
+                            var bottomMostY = (ships[pid].y + Config.AOI_HEIGHT) % Config.HEIGHT;            
+
+                            // Check if player's AOI overlaps with any grids
+                            // For each grid it overlaps with, subscribe to that grid
+                            // For each grid we leave, unsubscribe to it
+                            checkGridIntersectionRemove(leftMostX, rightMostX, topMostY, bottomMostY, pid, "ship", false);
 
                             // Informs all players except this new guy
                             // This step is irrelevant because we now rely on grids to tell us
